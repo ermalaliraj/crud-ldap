@@ -1,0 +1,69 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-3.1.xsd
+	http://www.springframework.org/schema/util  
+	http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+	
+	<sec:global-method-security secured-annotations="enabled" 
+								pre-post-annotations="enabled"/>
+	
+	<sec:http pattern="/images/**" security="none"/>
+	<sec:http access-denied-page="/denied">
+	    <sec:intercept-url pattern="/login" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+	    <sec:intercept-url pattern="/**" access="ROLE_ADMIN,ROLE_USER" />
+	   	<sec:form-login login-page="/login" default-target-url="/home"
+			authentication-failure-url="/login?error=true"/>
+		<sec:logout logout-success-url="/login" />
+	    <!-- sec:csrf disabled="true"/ --> <!-- if you are adding to an exiting app, you may need to disable CSRF protection until you can make application changes. -->
+	</sec:http>
+
+	<!-- OpenLDP 
+	<util:properties id="env">
+	  <prop key="url">ldap://localhost:389/</prop>
+	  <prop key="manager.user">uid=admin,ou=system</prop>
+	  <prop key="manager.pwd">secret</prop>
+	</util:properties> -->
+	
+	<util:properties id="env">
+	  <prop key="url">ldap://localhost:10389/</prop>
+	  <prop key="manager_user">uid=admin,ou=system</prop>
+	  <prop key="manager_pwd">secret</prop>
+	</util:properties>
+
+	<sec:ldap-server 
+		id="contextSource" 
+		url="#{env['url']}"
+		manager-dn="#{env['manager_user']}"
+		manager-password="#{env['manager_pwd']}"/>
+		 
+	<sec:authentication-manager erase-credentials="true">
+		<sec:authentication-provider ref='ldapAuthProvider' />
+	</sec:authentication-manager>
+
+<!-- using bean-based configuration here to set the DefaultLdapAuthoritiesPopulater with 
+		ignorePartialResultsException=true.  This is a known Spring/AD issue and a workaround for it -->
+	<bean id="ldapAuthProvider" class="org.springframework.security.ldap.authentication.LdapAuthenticationProvider">
+		<constructor-arg>
+			<bean class="org.springframework.security.ldap.authentication.BindAuthenticator">
+				<constructor-arg ref="contextSource" />
+				<property name="userDnPatterns">
+					<list>
+						<value>uid={0},ou=users,ou=system</value>
+					</list>
+				</property>
+			</bean>
+		</constructor-arg>
+		<constructor-arg>
+			<bean class="org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator">
+				<constructor-arg ref="contextSource" />
+				<constructor-arg value="ou=groups,ou=system" />
+				<property name="groupRoleAttribute" value="ou" />
+			</bean>
+		</constructor-arg>
+	</bean>
+</beans>

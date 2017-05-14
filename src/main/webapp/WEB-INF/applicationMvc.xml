@@ -1,0 +1,43 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+	<!-- Something is missing here, I think ... -->
+
+	<mvc:annotation-driven />
+
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/views/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<mvc:resources mapping="/static/**" location="/" />
+
+	<mvc:default-servlet-handler />
+	
+	<mvc:view-controller path="/login" view-name="login"/>
+	<mvc:view-controller path="/register" view-name="register"/>
+	
+	<!-- <mvc:view-controller path="/" view-name="index"/>
+	<mvc:view-controller path="/login" view-name="login"/>
+	<mvc:view-controller path="/register" view-name="register"/>
+	<mvc:view-controller path="/usersList" view-name="usersList"/> -->
+	<!-- <mvc:view-controller path="/addUserJsp" view-name="addUser"/> -->
+	
+	<bean name="/user.htm" class="com.ea.crud.web.controller.UserController">
+  		<property name="userService" ref="userService"/>
+	</bean>
+	
+	<bean name="/item.htm" class="com.ea.crud.web.controller.ItemController">
+  		<property name="itemService" ref="itemService"/>
+  		<property name="userService" ref="userService"/>
+	</bean>
+	
+
+
+</beans>
